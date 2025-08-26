@@ -1,8 +1,10 @@
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using EzySlice;
 using DamageSystem;
+using Random = UnityEngine.Random;
 
 public class VoronoiBreakable : Damageable
 {
@@ -26,6 +28,14 @@ public class VoronoiBreakable : Damageable
     [SerializeField] private int minimumVertexCount = 8; // 최소 정점 수
 
     private List<GameObject> objectsToDestroy = new List<GameObject>(); // 안전한 삭제를 위한 목록
+
+    private void Start()
+    {
+        if (crossSectionMaterial == null)
+        {
+            crossSectionMaterial = gameObject.GetComponent<MeshRenderer>().material;
+        }
+    }
 
     public override void DoDamage(DamageInfo info)
     {
@@ -106,21 +116,35 @@ public class VoronoiBreakable : Damageable
         objectsToDestroy.Clear();
     }
     
-    private Vector3[] GenerateVoronoiSeeds(Vector3 center, int count)
+    private Vector3[] GenerateVoronoiSeeds(Vector3 hitPoint, int count)
     {
         Vector3[] seeds = new Vector3[count];
         Bounds bounds = GetComponent<Collider>().bounds;
-        
+        float maxDistance = bounds.size.magnitude;
+    
         for (int i = 0; i < count; i++)
         {
-            // 바운드 내 랜덤 포인트 생성
-            seeds[i] = new Vector3(
-                Random.Range(bounds.min.x, bounds.max.x),
-                Random.Range(bounds.min.y, bounds.max.y),
-                Random.Range(bounds.min.z, bounds.max.z)
-            );
-        }
+            Vector3 candidate;
+            float weight;
         
+            do {
+                // 랜덤 포인트 생성
+                candidate = new Vector3(
+                    Random.Range(bounds.min.x, bounds.max.x),
+                    Random.Range(bounds.min.y, bounds.max.y),
+                    Random.Range(bounds.min.z, bounds.max.z)
+                );
+            
+                // 히트포인트로부터의 거리 기반 가중치 계산
+                float distance = Vector3.Distance(candidate, hitPoint);
+                weight = 1.0f - (distance / maxDistance); // 가까울수록 높은 가중치
+            
+                // 가중치 기반으로 수락/거부 결정
+            } while (Random.value > weight * weight); // 제곱해서 더 강한 집중도
+        
+            seeds[i] = candidate;
+        }
+    
         return seeds;
     }
     

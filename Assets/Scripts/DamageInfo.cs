@@ -21,22 +21,7 @@ namespace DamageSystem
         public GameObject sender = null;
 
         public DamageInfo() { }
-
-        public void ApplyImpact(Rigidbody rb)
-        {
-            if (rb == null)
-                return;
-
-            if (damageType == DamageType.Explosion)
-            {
-                rb.AddExplosionForce( hitForce, hitPoint, explosionRadius, upwardsModifier, forceMode );
-            }
-            else if (damageType == DamageType.Shoot)
-            {
-                rb.AddForceAtPosition( hitForce * hitDir, hitPoint, forceMode );
-            }
-        }
-
+        
     }
 }
 
